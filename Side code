@@ -1,0 +1,325 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editable Tables with Persistence</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f7f7f7;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            color: #4CAF50;
+        }
+        .table-container {
+            margin: 20px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #fff;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        label {
+            font-weight: bold;
+        }
+        input, select, button {
+            padding: 8px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>Editable Tables with Persistence</h1>
+
+    <!-- Empty container for tables -->
+    <div id="tables-container">
+        <!-- Tables will be created here -->
+    </div>
+
+    <!-- Controls for managing tables -->
+    <div class="controls">
+        <h2>Manage Tables</h2>
+
+        <!-- Create Table -->
+        <h3>Create a New Table</h3>
+        <label for="new-table-name">Table Name:</label>
+        <input type="text" id="new-table-name" placeholder="Enter table name (e.g., Table1)" />
+        <button id="create-table-button">Create Table</button>
+
+        <!-- Add Row -->
+        <h3>Add a Row to a Table</h3>
+        <label for="table-select">Select Table:</label>
+        <select id="table-select">
+            <!-- Options will be added dynamically -->
+        </select>
+
+        <label for="row-attribute">Attribute:</label>
+        <input type="text" id="row-attribute" placeholder="Enter attribute (e.g., Date)" />
+
+        <label for="row-value">Value:</label>
+        <input type="text" id="row-value" placeholder="Enter value" />
+
+        <button id="add-row-button">Add Row</button>
+
+        <!-- Update Row -->
+        <h3>Update a Row in a Table</h3>
+        <label for="update-table-select">Select Table:</label>
+        <select id="update-table-select">
+            <!-- Options will be added dynamically -->
+        </select>
+
+        <label for="update-attribute">Attribute to Update:</label>
+        <input type="text" id="update-attribute" placeholder="Enter existing attribute" />
+
+        <label for="update-value">New Value:</label>
+        <input type="text" id="update-value" placeholder="Enter new value" />
+
+        <button id="update-row-button">Update Row</button>
+
+        <!-- Delete Row -->
+        <h3>Delete a Row from a Table</h3>
+        <label for="delete-table-select">Select Table:</label>
+        <select id="delete-table-select">
+            <!-- Options will be added dynamically -->
+        </select>
+
+        <label for="delete-attribute">Attribute to Delete:</label>
+        <input type="text" id="delete-attribute" placeholder="Enter existing attribute to delete" />
+
+        <button id="delete-row-button">Delete Row</button>
+    </div>
+
+    <script>
+        const tablesContainer = document.getElementById("tables-container");
+        const tableSelect = document.getElementById("table-select");
+        const updateTableSelect = document.getElementById("update-table-select");
+        const deleteTableSelect = document.getElementById("delete-table-select");
+
+        // Load tables from localStorage
+        function loadTables() {
+            const savedTables = JSON.parse(localStorage.getItem("tables")) || {};
+            Object.keys(savedTables).forEach(tableName => {
+                createTableDOM(tableName, savedTables[tableName].rows);
+            });
+        }
+
+        // Save tables to localStorage
+        function saveTables() {
+            const tables = {};
+            const tableContainers = document.querySelectorAll(".table-container");
+
+            tableContainers.forEach(container => {
+                const tableName = container.id;
+                const rows = [];
+                const tableRows = container.querySelectorAll("tbody tr");
+
+                tableRows.forEach(row => {
+                    const cells = row.querySelectorAll("td");
+                    rows.push({ attribute: cells[0].textContent, value: cells[1].textContent });
+                });
+
+                tables[tableName] = { rows };
+            });
+
+            localStorage.setItem("tables", JSON.stringify(tables));
+        }
+
+        // Create Table DOM
+        function createTableDOM(tableName, rows = []) {
+            // Create table container
+            const tableContainer = document.createElement("div");
+            tableContainer.className = "table-container";
+            tableContainer.id = tableName;
+
+            // Create table structure
+            const table = document.createElement("table");
+            table.innerHTML = `
+                <caption>${tableName}</caption>
+                <thead>
+                    <tr>
+                        <th>Attribute</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rows.map(row => `<tr><td>${row.attribute}</td><td>${row.value}</td></tr>`).join("")}
+                </tbody>
+            `;
+
+            tableContainer.appendChild(table);
+            tablesContainer.appendChild(tableContainer);
+
+            // Add to dropdowns
+            const option = document.createElement("option");
+            option.value = tableName;
+            option.textContent = tableName;
+            tableSelect.appendChild(option);
+            const updateOption = option.cloneNode(true);
+            updateTableSelect.appendChild(updateOption);
+            const deleteOption = option.cloneNode(true);
+            deleteTableSelect.appendChild(deleteOption);
+
+            saveTables(); // Save after creating a new table
+        }
+
+        // Create Table Button Handler
+        document.getElementById("create-table-button").addEventListener("click", function() {
+            const tableName = document.getElementById("new-table-name").value.trim();
+
+            if (!tableName) {
+                alert("Please enter a valid table name.");
+                return;
+            }
+
+            // Check if table with the same name already exists
+            if (document.getElementById(tableName)) {
+                alert(`Table "${tableName}" already exists.`);
+                return;
+            }
+
+            createTableDOM(tableName);
+            document.getElementById("new-table-name").value = ""; // Clear input
+        });
+
+        // Add Row Button Handler
+        document.getElementById("add-row-button").addEventListener("click", function() {
+            const tableId = tableSelect.value; // Selected table ID
+            if (!tableId) {
+                alert("Please select a table to add a row.");
+                return;
+            }
+
+            const attribute = document.getElementById("row-attribute").value.trim();
+            const value = document.getElementById("row-value").value.trim();
+
+            if (!attribute || !value) {
+                alert("Please fill in both the attribute and value fields.");
+                return;
+            }
+
+            const table = document.querySelector(`#${tableId} table tbody`);
+            const newRow = document.createElement("tr");
+            newRow.innerHTML = `<td>${attribute}</td><td>${value}</td>`;
+            table.appendChild(newRow);
+
+            saveTables(); // Save changes after adding a row
+
+            alert(`Row added to "${tableId}".`);
+            document.getElementById("row-attribute").value = ""; // Clear inputs
+            document.getElementById("row-value").value = "";
+        });
+
+        // Update Row Button Handler
+        document.getElementById("update-row-button").addEventListener("click", function() {
+            const tableId = updateTableSelect.value; // Selected table ID
+            if (!tableId) {
+                alert("Please select a table to update a row.");
+                return;
+            }
+
+            const attributeToUpdate = document.getElementById("update-attribute").value.trim();
+            const newValue = document.getElementById("update-value").value.trim();
+
+            if (!attributeToUpdate || !newValue) {
+                alert("Please fill in both the attribute and value fields.");
+                return;
+            }
+
+            const table = document.querySelector(`#${tableId} table tbody`);
+            let updated = false;
+
+            table.querySelectorAll("tr").forEach(row => {
+                const attributeCell = row.children[0];
+                if (attributeCell.textContent.toLowerCase() === attributeToUpdate.toLowerCase()) {
+                    row.children[1].textContent = newValue; // Update the value
+                    updated = true;
+                }
+            });
+
+            if (updated) {
+                alert(`Row updated in "${tableId}".`);
+                saveTables(); // Save changes after updating
+            } else {
+                alert(`Attribute "${attributeToUpdate}" not found in table "${tableId}".`);
+            }
+
+            document.getElementById("update-attribute").value = ""; // Clear inputs
+            document.getElementById("update-value").value = "";
+        });
+
+        // Delete Row Button Handler
+        document.getElementById("delete-row-button").addEventListener("click", function() {
+            const tableId = deleteTableSelect.value; // Selected table ID
+            if (!tableId) {
+                alert("Please select a table to delete a row.");
+                return;
+            }
+
+            const attributeToDelete = document.getElementById("delete-attribute").value.trim();
+
+            if (!attributeToDelete) {
+                alert("Please enter an attribute to delete.");
+                return;
+            }
+
+            const table = document.querySelector(`#${tableId} table tbody`);
+            let deleted = false;
+
+            table.querySelectorAll("tr").forEach(row => {
+                const attributeCell = row.children[0];
+                if (attributeCell.textContent.toLowerCase() === attributeToDelete.toLowerCase()) {
+                    row.remove(); // Remove the row
+                    deleted = true;
+                }
+            });
+
+            if (deleted) {
+                alert(`Row with attribute "${attributeToDelete}" deleted from "${tableId}".`);
+                saveTables(); // Save changes after deleting
+            } else {
+                alert(`Attribute "${attributeToDelete}" not found in table "${tableId}".`);
+            }
+
+            document.getElementById("delete-attribute").value = ""; // Clear input
+        });
+
+        // Load tables when the page is loaded
+        window.addEventListener("load", loadTables);
+    </script>
+</body>
+</html>
