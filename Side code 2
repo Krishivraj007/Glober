@@ -1,0 +1,195 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Gallery</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            background-color: #f9f9f9;
+        }
+
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            width: 80%;
+            max-width: 1200px;
+        }
+
+        .gallery-item {
+            text-align: center;
+            background-color: #fff;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .gallery-item img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+        }
+
+        .gallery-item p {
+            margin-top: 10px;
+            font-size: 1rem;
+            color: #333;
+        }
+
+        .delete-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: red;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .canvas-container {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        canvas {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        .save-button, .eraser-button {
+            margin-top: 10px;
+            background-color: green;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .eraser-button {
+            background-color: orange;
+        }
+    </style>
+    <script>
+        let canvas, ctx;
+        let isDrawing = false;
+        let isErasing = false;
+
+        window.onload = () => {
+            canvas = document.getElementById('drawingCanvas');
+            ctx = canvas.getContext('2d');
+
+            canvas.addEventListener('mousedown', startDrawing);
+            canvas.addEventListener('mouseup', stopDrawing);
+            canvas.addEventListener('mousemove', draw);
+
+            function startDrawing() {
+                isDrawing = true;
+                ctx.beginPath();
+            }
+
+            function stopDrawing() {
+                isDrawing = false;
+                ctx.closePath();
+            }
+
+            function draw(event) {
+                if (!isDrawing) return;
+
+                const rect = canvas.getBoundingClientRect();
+                const x = event.clientX - rect.left;
+                const y = event.clientY - rect.top;
+
+                ctx.lineWidth = 5;
+                ctx.lineCap = 'round';
+                ctx.strokeStyle = isErasing ? 'white' : 'black';
+
+                ctx.lineTo(x, y);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+            }
+        };
+
+        function saveDrawing() {
+            const gallery = document.querySelector('.gallery');
+            const dataURL = canvas.toDataURL('image/png');
+
+            const galleryItem = document.createElement('div');
+            galleryItem.className = 'gallery-item';
+
+            const deleteButton = document.createElement('button');
+            deleteButton.className = 'delete-button';
+            deleteButton.innerText = 'Delete';
+            deleteButton.onclick = deleteImage;
+
+            const img = document.createElement('img');
+            img.src = dataURL;
+            img.alt = 'User Drawing';
+
+            const caption = document.createElement('p');
+            caption.innerText = 'User Drawing';
+
+            galleryItem.appendChild(deleteButton);
+            galleryItem.appendChild(img);
+            galleryItem.appendChild(caption);
+            gallery.appendChild(galleryItem);
+        }
+
+        function deleteImage(event) {
+            const galleryItem = event.target.closest('.gallery-item');
+            galleryItem.remove();
+        }
+
+        function toggleEraser() {
+            isErasing = !isErasing;
+            const eraserButton = document.querySelector('.eraser-button');
+            eraserButton.innerText = isErasing ? 'Eraser: ON' : 'Eraser: OFF';
+        }
+    </script>
+</head>
+<body>
+
+    <h1>My Image Gallery</h1>
+
+    <div class="canvas-container">
+        <canvas id="drawingCanvas" width="400" height="400"></canvas>
+        <br>
+        <button class="save-button" onclick="saveDrawing()">Save Drawing</button>
+        <button class="eraser-button" onclick="toggleEraser()">Eraser: OFF</button>
+    </div>
+
+    <div class="gallery">
+        <div class="gallery-item">
+            <button class="delete-button" onclick="deleteImage(event)">Delete</button>
+            <img src="https://via.placeholder.com/200" alt="Sample Image 1">
+            <p>Description of Image 1</p>
+        </div>
+        <div class="gallery-item">
+            <button class="delete-button" onclick="deleteImage(event)">Delete</button>
+            <img src="https://via.placeholder.com/200" alt="Sample Image 2">
+            <p>Description of Image 2</p>
+        </div>
+        <div class="gallery-item">
+            <button class="delete-button" onclick="deleteImage(event)">Delete</button>
+            <img src="https://via.placeholder.com/200" alt="Sample Image 3">
+            <p>Description of Image 3</p>
+        </div>
+    </div>
+
+</body>
+</html>
