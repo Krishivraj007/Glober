@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Manager</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 16px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            resize: vertical;
+        }
+        select, button {
+            padding: 10px;
+            margin: 5px 0;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        .code-display {
+            background-color: #f4f4f4;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-top: 20px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Application Code Manager</h1>
+        <label for="language">Select Programming Language:</label>
+        <select id="language">
+            <option value="html">HTML</option>
+            <option value="css">CSS</option>
+            <option value="javascript">JavaScript</option>
+            <option value="python">Python</option>
+            <option value="java">Java</option>
+            <option value="csharp">C#</option>
+            <option value="cpp">C++</option>
+            <!-- Add more languages as needed -->
+        </select>
+
+        <label for="codeInput">Enter your application code below:</label>
+        <textarea id="codeInput" placeholder="Write your code here..."></textarea>
+
+        <button onclick="saveCode()">Save Code</button>
+        <button onclick="clearCode()">Clear Code</button>
+
+        <h2>Saved Code</h2>
+        <div id="codeDisplay" class="code-display">Your code will appear here...</div>
+    </div>
+
+    <script>
+        function saveCode() {
+            const language = document.getElementById('language').value;
+            const code = document.getElementById('codeInput').value;
+
+            if (!code.trim()) {
+                alert("Please enter some code before saving.");
+                return;
+            }
+
+            const codeDisplay = document.getElementById('codeDisplay');
+            codeDisplay.textContent = `Language: ${language}\n\n${code}`;
+        }
+
+        function clearCode() {
+            document.getElementById('codeInput').value = '';
+            document.getElementById('codeDisplay').textContent = 'Your code will appear here...';
+        }
+    </script>
+</body>
+</html>
